@@ -43,7 +43,7 @@ public class ContainerTemplate extends AbstractDescribableImpl<ContainerTemplate
 
     private final List<ContainerEnvVar> envVars = new ArrayList<ContainerEnvVar>();
 
-    private final List<ContainerLivenessProbe> livenessProbe = new ArrayList<ContainerLivenessProbe>();
+    private ContainerLivenessProbe livenessProbe;
 
     @DataBoundConstructor
     public ContainerTemplate(String image) {
@@ -149,11 +149,11 @@ public class ContainerTemplate extends AbstractDescribableImpl<ContainerTemplate
         this.envVars.addAll(envVars);
     }
 
-    public List<ContainerLivenessProbe> getLivenessProbe() { return livenessProbe; }
+    public ContainerLivenessProbe getLivenessProbe() { return livenessProbe; }
 
     @DataBoundSetter
-    public void setLivenessProbe(List<ContainerLivenessProbe> livenessProbe) {
-        this.livenessProbe.addAll(livenessProbe);
+    public void setLivenessProbe(ContainerLivenessProbe livenessProbe) {
+        this.livenessProbe = livenessProbe;
     }
 
     public String getResourceRequestMemory() {
