@@ -342,10 +342,10 @@ public class KubernetesCloud extends Cloud {
             containerMounts.add(new VolumeMount(containerTemplate.getWorkingDir(), WORKSPACE_VOLUME_NAME, false, null));
         }
 
+        ContainerLivenessProbe clp = containerTemplate.getLivenessProbe();
         Probe livenessProbe = null;
-        for (ContainerLivenessProbe clp : containerTemplate.getLivenessProbe()) {
-            if (parseLivenessProbe(clp.getExecArgs()) != null) {
-                livenessProbe = new ProbeBuilder()
+        if(clp != null && parseLivenessProbe(clp.getExecArgs()) != null) {
+            livenessProbe = new ProbeBuilder()
                     .withExec(new ExecAction(parseLivenessProbe(clp.getExecArgs())))
                     .withInitialDelaySeconds(clp.getInitialDelaySeconds())
                     .withTimeoutSeconds(clp.getTimeoutSeconds())
@@ -353,7 +353,6 @@ public class KubernetesCloud extends Cloud {
                     .withPeriodSeconds(clp.getPeriodSeconds())
                     .withSuccessThreshold(clp.getSuccessThreshold())
                     .build();
-            }
         }
 
         return new ContainerBuilder()
@@ -520,14 +519,14 @@ public class KubernetesCloud extends Cloud {
      * @return
      */
     List<String> parseLivenessProbe(String livenessProbeExec) {
-        if (livenessProbeExec == null || livenessProbeExec.isEmpty()) {
+        if (StringUtils.isBlank(livenessProbeExec)) {
             return null;
         }
         // handle quoted arguments
         Matcher m = SPLIT_IN_SPACES.matcher(livenessProbeExec);
         List<String> commands = new ArrayList<String>();
         while (m.find()) {
-            commands.add(substituteEnv(m.group(1).replace("\"", "")));
+            commands.add(substituteEnv(m.group(1).replace("\"", "").replace("?:\\\"", "")));
         }
         return commands;
     }
@@ -543,6 +542,8 @@ public class KubernetesCloud extends Cloud {
             ArrayList<PodTemplate> templates = getMatchingTemplates(label);
 
             for (PodTemplate t: templates) {
+
+                LOGGER.log(Level.INFO, "Template: " + t.getDisplayName());
                 for (int i = 1; i <= excessWorkload; i++) {
                     if (!addProvisionedSlave(t, label)) {
                         break;
